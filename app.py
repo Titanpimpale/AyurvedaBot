@@ -3,6 +3,10 @@ import streamlit as st
 import tensorflow as tf
 from tensorflow import keras
 from streamlit_chat import message as st_message
+import openai
+
+openai.api_key = "your_openai_api_key_here"
+
 
 dosha_descriptions = [
     "You have Vata dosha:\n"
@@ -167,7 +171,17 @@ def predict_dosha():
     st.session_state.features = np.array(st.session_state.features).reshape(1, 20)
     model = keras.models.load_model('model')
     pred = np.argmax(model.predict(st.session_state.features))
-    st.session_state.history.append({"message": dosha_descriptions[pred], "is_user": False})
+    
+    # Use OpenAI API to generate an answer
+    question = "What is the dosha related to " + dosha_descriptions[pred] + "?"
+    answer = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=question,
+        max_tokens=50
+    )
+    
+    st.session_state.history.append({"message": answer.choices[0].text.strip(), "is_user": False})
+
 
 user_input = st.text_input("Talk to the bot", key="user_input")
 
